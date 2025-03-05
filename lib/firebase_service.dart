@@ -58,6 +58,42 @@ class NotificationHelper {
     } catch (e) {
       print('🚨 Initialization Error: $e');
     }
+
+
+
+    // Configure background and terminated state handling
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print('🔔 App Opened from Background Notification');
+      _handleNotificationNavigation(message);
+    });
+
+    // Handle initial message when app is launched from terminated state
+    RemoteMessage? initialMessage =
+    await FirebaseMessaging.instance.getInitialMessage();
+
+    if (initialMessage != null) {
+      print('🚀 App Launched from Terminated State Notification');
+      _handleNotificationNavigation(initialMessage);
+    }
+  }
+
+  static void _handleNotificationNavigation(RemoteMessage message) {
+    // Implement your navigation logic based on notification type
+    String? type = message.data['type'];
+
+    switch (type) {
+      case 'call':
+      // Navigate to call screen
+      // Example:
+      // Navigator.pushNamed(context, '/call', arguments: message.data);
+        break;
+      case 'message':
+      // Navigate to message screen
+        break;
+      default:
+        print('🤷 Unknown notification type: $type');
+    }
+
   }
 
   // Comprehensive Notification Listener
