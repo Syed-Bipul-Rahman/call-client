@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "95042100894",
+    "project_id": "agora-call-service",
+    "storage_bucket": "agora-call-service.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:95042100894:android:9a81a2a2a171361a4f658f",
+        "android_client_info": {
+          "package_name": "com.example.call_agora_lock"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjkT1aQ0WJ-sqKoN0IeLBtUwOXpAUmUe4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
