@@ -11,6 +11,12 @@ void main()async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform
   );
+  FirebaseMessaging.instance.setAutoInitEnabled(true);
+  FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
   try {
     if (GetPlatform.isMobile) {
       final RemoteMessage? remoteMessage = await FirebaseMessaging.instance.getInitialMessage();
@@ -64,6 +70,19 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
 
       _counter++;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    NotificationHelper.init().then((_) {
+      // Get FCM Token
+      NotificationHelper.getFcmToken();
+
+      // Start listening for notifications
+      NotificationHelper.firebaseListenNotification(context: context);
     });
   }
 

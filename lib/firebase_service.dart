@@ -6,155 +6,201 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-
-
 FlutterLocalNotificationsPlugin fln = FlutterLocalNotificationsPlugin();
 
 class NotificationHelper {
-
   static final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+
+  // Fetch and store FCM Token
   static Future<void> getFcmToken() async {
-    String? fcmToken = await _firebaseMessaging.getToken();
-    if (fcmToken != null) {
-      PrefsHelper.setString(Constants.fcmToken, fcmToken);
+    try {
+      String? fcmToken = await _firebaseMessaging.getToken();
+      if (fcmToken != null) {
+        PrefsHelper.setString(Constants.fcmToken, fcmToken);
+        print('📱 FCM Token Successfully Generated: $fcmToken');
+      } else {
+        print('❌ Failed to generate FCM Token');
+      }
+    } catch (e) {
+      print('🚨 Error generating FCM Token: $e');
     }
-    print('FCM Token: $fcmToken');
   }
 
-  //==================Request for permission and Generate FCM token=================
-  static init() async {
-    //final SharedPreferences prefs = await SharedPreferences.getInstance();
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
+  // Initialize Firebase Messaging
+  static Future<void> init() async {
+    try {
+      // Request Notification Permissions
+      NotificationSettings settings = await _firebaseMessaging.requestPermission(
+        alert: true,
+        announcement: true,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
 
+      print('🔔 Notification Permission Status: ${settings.authorizationStatus}');
 
-    NotificationSettings settings = await messaging.requestPermission(
-      alert: true,
-      announcement: true,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
-
-    debugPrint(
-        'User granted permission==================>>>>>>>>>>>>: ${settings.authorizationStatus}');
-
-    String? token = await messaging.getToken();
-
-    //  SharePrefsHelper.setString(SharedPreferenceValue.fcmToken, token!);
-
-    debugPrint('FCM TOKEN <<<<<<<=====>>>>>>> $token');
-  }
-
-  //==================Listen Firebase Notification in every State of the app=================
-
-  static firebaseListenNotification({  required BuildContext context}) async {
-    FirebaseMessaging.instance.subscribeToTopic('signedInUsers');
-//============>>>>>Listen Notification when the app is in foreground state<<<<<<<===========
-
-    FirebaseMessaging.onMessage.listen((message) {
-      // debugPrint(
-      //     "Firebase onMessage=============================>>>>>>>>>>>>>>>>>>${message.data}");
-      //
-      //
-      initLocalNotification(message: message);
-
-      print("Notification full  title======>${message.notification!.title.toString()}");
-      // print("Notification type======>${message.data['type'].toString()}");
-      if (message.data.isNotEmpty) {
-        // Extract the 'type' field from the 'data' map
-        String? type = message.data['type'];
-        print("Notification type: $type");
+      // Get and log FCM Token
+      String? token = await _firebaseMessaging.getToken();
+      if (token != null) {
+        print('🔑 FCM Token: $token');
+        PrefsHelper.setString(Constants.fcmToken, token);
       }
 
-      showTextNotification(
-        title: message.notification!.title!,
-        body: message.notification!.body!,
-
+      // Configure messaging options
+      _firebaseMessaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
       );
-    });
-
-//============>>>>>Listen Notification when the app is in BackGround state<<<<<<<===========
-
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      handleMessage(message: message);
-    });
-
-//============>>>>>Listen Notification when the app is in Terminated state<<<<<<<===========
-
-    RemoteMessage? terminatedMessage =
-    await FirebaseMessaging.instance.getInitialMessage();
-
-    if (terminatedMessage != null) {
-      //handleMessage(message: terminatedMessage);
+    } catch (e) {
+      print('🚨 Initialization Error: $e');
     }
   }
 
-  //============================Initialize Local Notification=======================
+  // Comprehensive Notification Listener
+  static Future<void> firebaseListenNotification({required BuildContext context}) async {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      // Detailed Logging
+      print('🔔 Notification Received');
+      print('🏷️ Title: ${message.notification?.title}');
+      print('📝 Body: ${message.notification?.body}');
 
-  static Future<void> initLocalNotification(
-      {required RemoteMessage message}) async {
-    AndroidInitializationSettings initializationSettingsAndroid =
-    const AndroidInitializationSettings("@mipmap/ic_launcher");
+      // Print all data fields
+      print('📦 Full Notification Data:');
+      message.data.forEach((key, value) {
+        print('- $key: $value');
+      });
 
-    var initializationSettingsIOS = const DarwinInitializationSettings();
-    var initializationSettings = InitializationSettings(
-        android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
+      // Specific type checking
+      String? type = message.data['type'];
+      print('📲 Notification Type: $type');
 
-    fln
-        .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
+      // You can add more specific logging based on your needs
+      if (message.data.containsKey('callType')) {
+        print('📞 Call Type: ${message.data['callType']}');
+      }
 
-    await fln.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse? paylod) {
-        debugPrint("==================>>>>>>>>>paylod hitted");
-        handleMessage(message: message);
-      },
-    );
+      // Rest of your existing code
+      initLocalNotification(message: message);
+      showTextNotification(
+        title: message.notification?.title ?? 'Notification',
+        body: message.notification?.body ?? 'You have a new message',
+      );
+    }, onError: (error) {
+      print('🚨 Notification Receive Error: $error');
+    });
   }
 
+  // Detailed Notification Logging
+  static void _logNotificationDetails(RemoteMessage message, {String notificationType = 'UNKNOWN'}) {
+    print('===== $notificationType NOTIFICATION =====');
+    print('🔔 Notification Title: ${message.notification?.title}');
+    print('📝 Notification Body: ${message.notification?.body}');
+    print('📦 Notification Data: ${message.data}');
 
-  static handleMessage({required RemoteMessage message}) {
-    Map<String, dynamic> data = message.data;
-
-    String type = data["type"];
-print("Notification type======>${data['type'].toString()}");
-
-    // if(type == "booking") {
-    //   Get.toNamed(AppRoutes.userNotificationScreen);
-    // }
-
+    // Log each data key-value pair
+    message.data.forEach((key, value) {
+      print('🔑 Data Key: $key, Value: $value');
+    });
+    print('================================');
   }
 
-// <-------------------------- Show Text Notification  --------------------------->
+  // Initialize Local Notification
+  static Future<void> initLocalNotification({required RemoteMessage message}) async {
+    try {
+      // Android Notification Settings
+      AndroidInitializationSettings androidInitSettings =
+      const AndroidInitializationSettings("@mipmap/ic_launcher");
+
+      // iOS Notification Settings
+      var iOSInitSettings = const DarwinInitializationSettings();
+
+      // Combined Initialization Settings
+      var initializationSettings = InitializationSettings(
+          android: androidInitSettings,
+          iOS: iOSInitSettings
+      );
+
+      // Request Notifications Permission for Android
+      fln
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission();
+
+      // Initialize Local Notifications
+      await fln.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse? payload) {
+          print('🔔 Local Notification Payload Received');
+          if (payload != null) {
+            handleMessage(message: message);
+          }
+        },
+      );
+    } catch (e) {
+      print('🚨 Local Notification Initialization Error: $e');
+    }
+  }
+
+  // Handle Notification Message
+  static void handleMessage({required RemoteMessage message}) {
+    try {
+      Map<String, dynamic> data = message.data;
+      String type = data["type"] ?? 'unknown';
+
+      print('🚀 Handling Notification Type: $type');
+      print('📬 Notification Data: $data');
+
+      // Add your custom routing or action logic here
+      // Example:
+      // if (type == "call") {
+      //   Navigator.pushNamed(context, CallScreen.routeName, arguments: data);
+      // }
+    } catch (e) {
+      print('🚨 Message Handling Error: $e');
+    }
+  }
+
+  // Show Text Notification
   static Future<void> showTextNotification({
     required String title,
     required String body,
   }) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-    AndroidNotificationDetails(
-      'notification', // meta-data android value
-      'notification', // meta-data android value
-      playSound: true,
-      importance: Importance.low,
-      priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
-    );
+    try {
+      // Android Notification Details
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'notification_channel',
+        'Notification Channel',
+        playSound: true,
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      );
 
-    var iOSPlatformChannelSpecifics = const DarwinNotificationDetails(
-        presentAlert: true, presentBadge: true, presentSound: true);
+      // iOS Notification Details
+      var iOSDetails = const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true
+      );
 
-    NotificationDetails platformChannelSpecifics = NotificationDetails(
-        android: androidPlatformChannelSpecifics,
-        iOS: iOSPlatformChannelSpecifics);
-    await fln.show(
-      0,
-      title,
-      body,
-      platformChannelSpecifics,
-    );
+      // Combined Notification Details
+      NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidDetails,
+        iOS: iOSDetails,
+      );
+
+      // Show Notification
+      await fln.show(
+        DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        title,
+        body,
+        platformChannelSpecifics,
+      );
+    } catch (e) {
+      print('🚨 Show Notification Error: $e');
+    }
   }
 }
