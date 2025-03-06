@@ -7,37 +7,43 @@ import 'package:get/get_utils/src/platform/platform.dart';
 import 'firebase_service.dart';
 
 void main() async {
+  // WidgetsFlutterBinding.ensureInitialized();
+  //
+  //
+  //
+  // // Register background handler
+  // FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  //
+  //
+  // WidgetsFlutterBinding.ensureInitialized();
+  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // FirebaseMessaging.instance.setAutoInitEnabled(true);
+  // FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+  //   alert: true,
+  //   badge: true,
+  //   sound: true,
+  // );
+  // try {
+  //   if (GetPlatform.isMobile) {
+  //     final RemoteMessage? remoteMessage =
+  //         await FirebaseMessaging.instance.getInitialMessage();
+  //     if (remoteMessage != null) {}
+  //
+  //     print('Call Firebase Init');
+  //     await NotificationHelper.init();
+  //
+  //     // await NotificationHelper.init(flutterLocalNotificationsPlugin);
+  //     // FirebaseMessaging.onBackgroundMessage(NotificationHelper.firebaseMessagingBackgroundHandler);
+  //   }
+  // } catch (e) {}
+  // // NotificationHelper.getFcmToken();
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  // await Firebase.initializeApp();
-
-  // Register background handler
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-
-  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  FirebaseMessaging.instance.setAutoInitEnabled(true);
-  FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
-  try {
-    if (GetPlatform.isMobile) {
-      final RemoteMessage? remoteMessage =
-          await FirebaseMessaging.instance.getInitialMessage();
-      if (remoteMessage != null) {}
 
-      print('Call Firebase Init');
-      await NotificationHelper.init();
-
-      // await NotificationHelper.init(flutterLocalNotificationsPlugin);
-      // FirebaseMessaging.onBackgroundMessage(NotificationHelper.firebaseMessagingBackgroundHandler);
-    }
-  } catch (e) {}
-  NotificationHelper.getFcmToken();
+  // Initialize notification service
+  await NotificationService.initialize();
 
   runApp(const MyApp());
 }
@@ -48,6 +54,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: NotificationService.navigatorKey,
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -88,20 +95,20 @@ class _MyHomePageState extends State<MyHomePage> {
   //     NotificationHelper.firebaseListenNotification(context: context);
   //   });
   // }
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeNotifications();
-  }
-
-  Future<void> _initializeNotifications() async {
-    // Initialize notification services
-    await NotificationHelper.init();
-
-    // Setup listeners
-    await NotificationHelper.setupNotificationListeners();
-  }
+  //
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _initializeNotifications();
+  // }
+  //
+  // Future<void> _initializeNotifications() async {
+  //   // Initialize notification services
+  //   await NotificationHelper.init();
+  //
+  //   // Setup listeners
+  //   await NotificationHelper.setupNotificationListeners();
+  // }
 
   @override
   Widget build(BuildContext context) {

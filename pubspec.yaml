@@ -23,6 +23,8 @@ dependencies:
   firebase_analytics:
   agora_rtc_engine:
   audioplayers:
+  permission_handler:
+  workmanager:
 
 dev_dependencies:
   flutter_test:
