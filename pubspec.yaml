@@ -21,6 +21,8 @@ dependencies:
   get: ^4.6.6
   shared_preferences:
   firebase_analytics:
+  agora_rtc_engine:
+  audioplayers:
 
 dev_dependencies:
   flutter_test:
@@ -34,3 +36,6 @@ flutter:
 
 
   uses-material-design: true
+assets:
+  - assets/
+  - assets/sounds/

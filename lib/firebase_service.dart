@@ -1,242 +1,281 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'dart:io';
 import 'package:call_agora_lock/constants.dart';
 import 'package:call_agora_lock/prefs_helpers.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+// Import the call screen
+// import 'package:call_agora_lock/screens/call_screen.dart';
+
+import 'call_screen.dart';
 
 FlutterLocalNotificationsPlugin fln = FlutterLocalNotificationsPlugin();
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// This needs to be a top-level function
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Ensure initialization
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
+  print("🔔 Background Notification Received: ${message.messageId}");
+  print("📱 Notification Type: ${message.data['type']}");
+
+  // Initialize local notifications
+  await initLocalNotificationsForBackground();
+
+  // Show notification
+  if (message.data['type'] == 'call') {
+    await showCallNotification(message);
+
+
+  }
+}
+
+// Initialize notifications for background messages
+Future<void> initLocalNotificationsForBackground() async {
+  AndroidInitializationSettings androidInitSettings =
+  const AndroidInitializationSettings("@mipmap/ic_launcher");
+  var iOSInitSettings = const DarwinInitializationSettings();
+  var initializationSettings = InitializationSettings(
+      android: androidInitSettings,
+      iOS: iOSInitSettings
+  );
+  await fln.initialize(initializationSettings);
+}
+
+// Show a high-priority call notification
+Future<void> showCallNotification(RemoteMessage message) async {
+  const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    'call_channel_id',
+    'Call Notifications',
+    importance: Importance.max,
+    priority: Priority.high,
+    showWhen: true,
+    enableVibration: true,
+    playSound: true,
+    sound: RawResourceAndroidNotificationSound('incoming_call'),
+    fullScreenIntent: true,
+  );
+
+  const DarwinNotificationDetails iOSDetails = DarwinNotificationDetails(
+    presentAlert: true,
+    presentBadge: true,
+    presentSound: true,
+    sound: 'incoming_call.mp3',
+    interruptionLevel: InterruptionLevel.critical,
+  );
+
+  NotificationDetails platformDetails =
+  NotificationDetails(android: androidDetails, iOS: iOSDetails);
+
+  await fln.show(
+    message.hashCode,
+    message.notification?.title ?? 'Incoming Call',
+    message.notification?.body ?? 'Someone is calling you',
+    platformDetails,
+    payload: 'call:${message.data['roomId']}',
+  );
+}
 
 class NotificationHelper {
   static final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
 
-  // Fetch and store FCM Token
+  // Get and store FCM token
   static Future<void> getFcmToken() async {
     try {
       String? fcmToken = await _firebaseMessaging.getToken();
       if (fcmToken != null) {
         PrefsHelper.setString(Constants.fcmToken, fcmToken);
-        print('📱 FCM Token Successfully Generated: $fcmToken');
-      } else {
-        print('❌ Failed to generate FCM Token');
+        print('📱 FCM Token: $fcmToken');
       }
     } catch (e) {
-      print('🚨 Error generating FCM Token: $e');
+      print('🚨 Error getting FCM token: $e');
     }
   }
 
   // Initialize Firebase Messaging
   static Future<void> init() async {
     try {
-      // Request Notification Permissions
-      NotificationSettings settings = await _firebaseMessaging.requestPermission(
-        alert: true,
-        announcement: true,
-        badge: true,
-        carPlay: false,
-        criticalAlert: false,
-        provisional: false,
-        sound: true,
-      );
-
-      print('🔔 Notification Permission Status: ${settings.authorizationStatus}');
-
-      // Get and log FCM Token
-      String? token = await _firebaseMessaging.getToken();
-      if (token != null) {
-        print('🔑 FCM Token: $token');
-        PrefsHelper.setString(Constants.fcmToken, token);
+      // Request permissions with high interruption level
+      if (Platform.isIOS) {
+        await _firebaseMessaging.requestPermission(
+          alert: true,
+          announcement: true,
+          badge: true,
+          carPlay: false,
+          criticalAlert: true, // For high-priority alerts
+          provisional: false,
+          sound: true,
+        );
       }
 
-      // Configure messaging options
-      _firebaseMessaging.setForegroundNotificationPresentationOptions(
+      // Configure notification presentation options
+      await _firebaseMessaging.setForegroundNotificationPresentationOptions(
         alert: true,
         badge: true,
         sound: true,
       );
+
+      // Setup background handler
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+      // Initialize local notifications
+      await initLocalNotifications();
+
+      // Get FCM token
+      await getFcmToken();
     } catch (e) {
-      print('🚨 Initialization Error: $e');
-    }
-
-
-
-    // Configure background and terminated state handling
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('🔔 App Opened from Background Notification');
-      _handleNotificationNavigation(message);
-    });
-
-    // Handle initial message when app is launched from terminated state
-    RemoteMessage? initialMessage =
-    await FirebaseMessaging.instance.getInitialMessage();
-
-    if (initialMessage != null) {
-      print('🚀 App Launched from Terminated State Notification');
-      _handleNotificationNavigation(initialMessage);
+      print('🚨 Notification initialization error: $e');
     }
   }
 
-  static void _handleNotificationNavigation(RemoteMessage message) {
-    // Implement your navigation logic based on notification type
-    String? type = message.data['type'];
-
-    switch (type) {
-      case 'call':
-      // Navigate to call screen
-      // Example:
-      // Navigator.pushNamed(context, '/call', arguments: message.data);
-        break;
-      case 'message':
-      // Navigate to message screen
-        break;
-      default:
-        print('🤷 Unknown notification type: $type');
-    }
-
-  }
-
-  // Comprehensive Notification Listener
-  static Future<void> firebaseListenNotification({required BuildContext context}) async {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      // Detailed Logging
-      print('🔔 Notification Received');
-      print('🏷️ Title: ${message.notification?.title}');
-      print('📝 Body: ${message.notification?.body}');
-
-      // Print all data fields
-      print('📦 Full Notification Data:');
-      message.data.forEach((key, value) {
-        print('- $key: $value');
-      });
-
-      // Specific type checking
-      String? type = message.data['type'];
-      print('📲 Notification Type: $type');
-
-      // You can add more specific logging based on your needs
-      if (message.data.containsKey('callType')) {
-        print('📞 Call Type: ${message.data['callType']}');
-      }
-
-      // Rest of your existing code
-      initLocalNotification(message: message);
-      showTextNotification(
-        title: message.notification?.title ?? 'Notification',
-        body: message.notification?.body ?? 'You have a new message',
-      );
-    }, onError: (error) {
-      print('🚨 Notification Receive Error: $error');
-    });
-  }
-
-  // Detailed Notification Logging
-  static void _logNotificationDetails(RemoteMessage message, {String notificationType = 'UNKNOWN'}) {
-    print('===== $notificationType NOTIFICATION =====');
-    print('🔔 Notification Title: ${message.notification?.title}');
-    print('📝 Notification Body: ${message.notification?.body}');
-    print('📦 Notification Data: ${message.data}');
-
-    // Log each data key-value pair
-    message.data.forEach((key, value) {
-      print('🔑 Data Key: $key, Value: $value');
-    });
-    print('================================');
-  }
-
-  // Initialize Local Notification
-  static Future<void> initLocalNotification({required RemoteMessage message}) async {
+  // Initialize local notifications
+  static Future<void> initLocalNotifications() async {
     try {
-      // Android Notification Settings
       AndroidInitializationSettings androidInitSettings =
       const AndroidInitializationSettings("@mipmap/ic_launcher");
-
-      // iOS Notification Settings
       var iOSInitSettings = const DarwinInitializationSettings();
-
-      // Combined Initialization Settings
       var initializationSettings = InitializationSettings(
           android: androidInitSettings,
           iOS: iOSInitSettings
       );
 
-      // Request Notifications Permission for Android
-      fln
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      fln.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
           ?.requestNotificationsPermission();
 
-      // Initialize Local Notifications
       await fln.initialize(
         initializationSettings,
-        onDidReceiveNotificationResponse: (NotificationResponse? payload) {
-          print('🔔 Local Notification Payload Received');
-          if (payload != null) {
-            handleMessage(message: message);
+        onDidReceiveNotificationResponse: (NotificationResponse response) {
+          print('🔔 Notification clicked: ${response.payload}');
+
+          if (response.payload?.startsWith('call:') == true) {
+            String roomId = response.payload!.split(':')[1];
+            _handleCallNotificationTap(roomId);
           }
         },
       );
     } catch (e) {
-      print('🚨 Local Notification Initialization Error: $e');
+      print('🚨 Local notification init error: $e');
     }
   }
 
-  // Handle Notification Message
-  static void handleMessage({required RemoteMessage message}) {
-    try {
-      Map<String, dynamic> data = message.data;
-      String type = data["type"] ?? 'unknown';
+  // Setup notification listeners
+  static Future<void> setupNotificationListeners() async {
+    // 1. Foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('🔔 Foreground message received');
+      _logMessageData(message);
 
-      print('🚀 Handling Notification Type: $type');
-      print('📬 Notification Data: $data');
+      if (message.data['type'] == 'call') {
+        _handleIncomingCall(message);
+      } else {
+        // Show regular notification
+        showTextNotification(
+          title: message.notification?.title ?? 'Notification',
+          body: message.notification?.body ?? 'You have a new notification',
+        );
+      }
+    });
 
-      // Add your custom routing or action logic here
-      // Example:
-      // if (type == "call") {
-      //   Navigator.pushNamed(context, CallScreen.routeName, arguments: data);
-      // }
-    } catch (e) {
-      print('🚨 Message Handling Error: $e');
+    // 2. Background message opens
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print('🔔 App opened from background notification');
+      _logMessageData(message);
+
+      if (message.data['type'] == 'call') {
+        _handleIncomingCall(message);
+      }
+    });
+
+    // 3. App opened from terminated state
+    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      print('🔔 App opened from terminated state notification');
+      _logMessageData(initialMessage);
+
+      if (initialMessage.data['type'] == 'call') {
+        _handleIncomingCall(initialMessage);
+      }
     }
   }
 
-  // Show Text Notification
+  // Log message data
+  static void _logMessageData(RemoteMessage message) {
+    print('📦 Message data: ${message.data}');
+    message.data.forEach((key, value) {
+      print('- $key: $value');
+    });
+  }
+
+  // Handle incoming call
+  static void _handleIncomingCall(RemoteMessage message) {
+    // Extract call data
+    Map<String, dynamic> callData = {
+      'callerId': message.data['callerId'] ?? '',
+      'callerName': message.data['callerName'] ?? 'Unknown Caller',
+      'callType': message.data['callType'] ?? 'video',
+      'roomId': message.data['roomId'] ?? '',
+      'caller_profile_pic': message.data['caller_profile_pic'],
+    };
+
+    // Navigate to call screen
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (_) => CallScreen(callData: callData),
+      ),
+    );
+  }
+
+  // Handle call notification tap
+  static void _handleCallNotificationTap(String roomId) {
+    // This would open call screen when notification is tapped
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (_) => CallScreen(
+          callData: {
+            'roomId': roomId,
+            'callerName': 'Incoming Call',
+            'callType': 'video',
+          },
+        ),
+      ),
+    );
+  }
+
+  // Show text notification
   static Future<void> showTextNotification({
     required String title,
     required String body,
   }) async {
     try {
-      // Android Notification Details
       const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-        'notification_channel',
-        'Notification Channel',
-        playSound: true,
+        'default_channel_id',
+        'Default Notifications',
         importance: Importance.high,
         priority: Priority.high,
-        icon: '@mipmap/ic_launcher',
       );
 
-      // iOS Notification Details
-      var iOSDetails = const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true
+      const DarwinNotificationDetails iOSDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
       );
 
-      // Combined Notification Details
-      NotificationDetails platformChannelSpecifics = NotificationDetails(
-        android: androidDetails,
-        iOS: iOSDetails,
-      );
+      const NotificationDetails platformDetails =
+      NotificationDetails(android: androidDetails, iOS: iOSDetails);
 
-      // Show Notification
       await fln.show(
-        DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        DateTime.now().millisecond,
         title,
         body,
-        platformChannelSpecifics,
+        platformDetails,
       );
     } catch (e) {
-      print('🚨 Show Notification Error: $e');
+      print('🚨 Error showing notification: $e');
     }
   }
 }
