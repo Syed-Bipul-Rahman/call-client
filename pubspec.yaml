@@ -26,6 +26,7 @@ dependencies:
   permission_handler:
   workmanager:
   flutter_login: ^5.0.0
+  wakelock_plus: ^1.2.10
 
 dev_dependencies:
   flutter_test:

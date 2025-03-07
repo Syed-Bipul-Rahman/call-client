@@ -10,6 +10,7 @@ import 'package:workmanager/workmanager.dart';
 import 'package:call_agora_lock/constants.dart';
 import 'package:call_agora_lock/prefs_helpers.dart';
 import 'call_screen.dart';
+import 'call_screen_presenter.dart';
 
 // Create a dedicated notification service class
 class NotificationService {
@@ -29,6 +30,34 @@ class NotificationService {
   static const String _callServiceTask = 'callServiceTask';
 
   // Initialize notification service
+  // static Future<void> initialize() async {
+  //   try {
+  //     // Initialize WorkManager
+  //     await Workmanager().initialize(
+  //       callbackDispatcher,
+  //       isInDebugMode: true,
+  //     );
+  //
+  //     // Initialize local notifications
+  //     await _initializeLocalNotifications();
+  //
+  //     // Set up Firebase Messaging
+  //     await _initializeFirebaseMessaging();
+  //
+  //     // Register notification listeners
+  //     await _setupNotificationListeners();
+  //
+  //     // Schedule periodic background work
+  //   //  _schedulePeriodicWork();
+  //
+  //     print('📱 Notification service initialized successfully');
+  //   } catch (e) {
+  //     print('🚨 Error initializing notification service: $e');
+  //   }
+  // }
+
+
+
   static Future<void> initialize() async {
     try {
       // Initialize WorkManager
@@ -47,13 +76,17 @@ class NotificationService {
       await _setupNotificationListeners();
 
       // Schedule periodic background work
-    //  _schedulePeriodicWork();
+      //_schedulePeriodicWork();
+
+      // NEW: Initialize call screen presenter
+      await initializeCallScreenPresenter();
 
       print('📱 Notification service initialized successfully');
     } catch (e) {
       print('🚨 Error initializing notification service: $e');
     }
   }
+
 
   // Initialize local notifications with proper channels
   static Future<void> _initializeLocalNotifications() async {
@@ -236,12 +269,38 @@ class NotificationService {
     });
   }
 
-  // Handle incoming call notification
+  // // Handle incoming call notification
+  // static void _handleIncomingCall(RemoteMessage message) async {
+  //   // 1. Show high-priority notification first
+  //   await _showCallNotification(message);
+  //
+  //   // 2. Extract call data
+  //   Map<String, dynamic> callData = {
+  //     'callerId': message.data['callerId'] ?? '',
+  //     'callerName': message.data['callerName'] ?? 'Unknown Caller',
+  //     'callType': message.data['callType'] ?? 'video',
+  //     'roomId': message.data['roomId'] ?? '',
+  //     'caller_profile_pic': message.data['caller_profile_pic'],
+  //   };
+  //
+  //   // 3. Store call data temporarily (important for recovering state)
+  //   await _storeCallData(callData);
+  //
+  //   // 4. Open call screen with reliable navigation
+  //   _openCallScreen(callData);
+  // }
+
+  // Add this method to your NotificationService class
+  static Future<void> initializeCallScreenPresenter() async {
+    await CallScreenPresenter.initialize();
+  }
+
+// Modify your _handleIncomingCall method to include this:
   static void _handleIncomingCall(RemoteMessage message) async {
-    // 1. Show high-priority notification first
+    // 1. Show high-priority notification first (existing code)
     await _showCallNotification(message);
 
-    // 2. Extract call data
+    // 2. Extract call data (existing code)
     Map<String, dynamic> callData = {
       'callerId': message.data['callerId'] ?? '',
       'callerName': message.data['callerName'] ?? 'Unknown Caller',
@@ -250,12 +309,16 @@ class NotificationService {
       'caller_profile_pic': message.data['caller_profile_pic'],
     };
 
-    // 3. Store call data temporarily (important for recovering state)
+    // 3. Store call data temporarily (existing code)
     await _storeCallData(callData);
 
-    // 4. Open call screen with reliable navigation
+    // 4. Open call screen with reliable navigation (existing code)
     _openCallScreen(callData);
+
+    // 5. NEW: Present call screen even when locked
+    await CallScreenPresenter.presentCallScreen(callData);
   }
+
 
   // Store call data temporarily
   static Future<void> _storeCallData(Map<String, dynamic> callData) async {
