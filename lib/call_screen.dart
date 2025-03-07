@@ -22,7 +22,7 @@ class _CallScreenState extends State<CallScreen> {
 
   void _initializeCallSound() async {
     _audioPlayer = AudioPlayer();
-    await _audioPlayer.play(AssetSource('assets/sounds/incoming_call.mp3'));
+    await _audioPlayer.play(AssetSource('sounds/incoming_call.mp3'));
     await _audioPlayer.setReleaseMode(ReleaseMode.loop);
   }
 

@@ -47,7 +47,7 @@ class NotificationService {
       await _setupNotificationListeners();
 
       // Schedule periodic background work
-      _schedulePeriodicWork();
+    //  _schedulePeriodicWork();
 
       print('📱 Notification service initialized successfully');
     } catch (e) {

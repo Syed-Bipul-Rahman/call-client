@@ -2,7 +2,10 @@ import 'package:call_agora_lock/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get_utils/src/platform/platform.dart';
+import 'package:flutter_login/flutter_login.dart';
+
 
 import 'firebase_service.dart';
 
@@ -75,13 +78,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
 
   // @override
   // void initState() {
@@ -109,7 +105,6 @@ class _MyHomePageState extends State<MyHomePage> {
   //   // Setup listeners
   //   await NotificationHelper.setupNotificationListeners();
   // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,19 +115,14 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+          children: [
+
+
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: (){},
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),
