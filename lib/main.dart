@@ -1,4 +1,5 @@
 import 'package:call_agora_lock/firebase_options.dart';
+import 'package:call_agora_lock/pages/lognPage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -63,69 +64,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //
-  //   NotificationHelper.init().then((_) {
-  //     // Get FCM Token
-  //     NotificationHelper.getFcmToken();
-  //
-  //     // Start listening for notifications
-  //     NotificationHelper.firebaseListenNotification(context: context);
-  //   });
-  // }
-  //
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _initializeNotifications();
-  // }
-  //
-  // Future<void> _initializeNotifications() async {
-  //   // Initialize notification services
-  //   await NotificationHelper.init();
-  //
-  //   // Setup listeners
-  //   await NotificationHelper.setupNotificationListeners();
-  // }
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-
-
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){},
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+      home: LoginPage(),
     );
   }
 }

@@ -1,0 +1,1 @@
+enum AppConstants {BEARER_TOKEN}
