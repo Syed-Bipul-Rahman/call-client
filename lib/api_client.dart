@@ -24,7 +24,7 @@ class ApiClient extends GetxService {
   static const _noInternet = "Can't connect to the internet!";
 
   Future<Response> _makeRequest(
-      String url, String method, Map<String, dynamic>? body,
+      String url, String method, dynamic body,
       {Map<String, String>? headers, List<MultipartBody>? files}) async {
     try {
       _bearerToken = await PrefsHelper.getString(AppConstants.BEARER_TOKEN.toString());
@@ -36,6 +36,17 @@ class ApiClient extends GetxService {
       debugPrint('--> $method: $url\nHeaders: $finalHeaders\nBody: $body');
       http.Response response;
 
+      // Check if we're dealing with JSON
+      bool isJsonRequest = finalHeaders['Content-Type'] == 'application/json';
+
+      // Prepare the body based on content type
+      dynamic processedBody = body;
+      if (isJsonRequest && body != null && body is Map) {
+        // For JSON requests, encode the map to a JSON string
+        processedBody = jsonEncode(body);
+      }
+
+
       switch (method) {
         case 'GET':
           response = await _client
@@ -45,10 +56,11 @@ class ApiClient extends GetxService {
         case 'POST':
           if (files != null && files.isNotEmpty) {
             response = await _postMultipart(
-                url, body as Map<String, String>?, files, finalHeaders);
+                url, body is Map<String, String> ? body : Map<String, String>.from(body as Map),
+                files, finalHeaders);
           } else {
             response = await _client
-                .post(Uri.parse(url), headers: finalHeaders, body: body)
+                .post(Uri.parse(url), headers: finalHeaders, body: processedBody)
                 .timeout(_timeout);
           }
           break;

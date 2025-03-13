@@ -1,6 +1,8 @@
 
 //get character list
 // RxList<CharacterModel> charactersList = <CharacterModel>[].obs;
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
@@ -55,20 +57,21 @@ class CallScreenController extends GetxController {
 
     Map<String, dynamic> body = {
 
-        "username": "bipul",
-        "email": "bipul@gmail.com",
+        "username": "sdfjksdkjfhsdjkfh",
+        "email": "sdfjksdkjfhsdjkfh@gmail.com",
         "password":"123456",
         "fcmToken":"cOLKxnGSTQ-WEtJ7kw_q-I:APA91bEVLxsJBq1HO8-4KK5fXvOEUA7ngkkuibIYMKqAbGGcj7SprgjgC1iJqABdECc2rO2ey7d66-ytKunV2ccYoTUYnGQIprGBH-918rbU3zopH3FLwgM"
 
     };
     var headers = {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     };
 
+    print("jacce body===========>"+body.toString());
     var response = await ApiClient().postData(
       ApiConstants.register,
-      body,
-      // headers: headers,
+      jsonEncode(body),
+       headers: headers,
     );
     print(response.body);
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -79,11 +82,9 @@ class CallScreenController extends GetxController {
 
     } else if (response.statusCode == 400) {
       isLoading(false);
-  //    Get.snackbar(response.statusCode.toString(), response.body['message']);
-      // showError("ERROR BODY========>" + response.body.toString());
+
     } else {
       isLoading(false);
-      // showError("ERROR BODY========>" + response.body.toString());
       ApiChecker.checkApi(response);
     }
   }
