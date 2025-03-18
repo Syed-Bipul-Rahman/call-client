@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:call_agora_lock/enum_file.dart';
+import 'package:call_agora_lock/pages/model/user_model.dart';
 import 'package:call_agora_lock/pages/user_list.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -19,6 +20,8 @@ import 'login_page.dart';
 class CallScreenController extends GetxController {
   var isLoading = false.obs;
 
+  RxList<User> userList = <User>[].obs;
+
 //get all users
   getUserList() async {
     isLoading(true);
@@ -26,12 +29,17 @@ class CallScreenController extends GetxController {
       var response = await ApiClient().getData(ApiConstants.getAllUsers);
 
       if (response.statusCode == 200) {
-        print(response.body);
+        // Access the 'users' key directly from the decoded response
+        List<dynamic> jsonResponse = response.body['users'];
 
-        //  showInfo(response.body.toString());
-        //   charactersList.value = (response.body['data']['attributes'] as List)
-        //       .map((e) => CharacterModel.fromJson(e))
-        //       .toList();
+        // Clear the existing list
+        userList.clear();
+
+        // Parse the JSON response into a list of User objects
+        List<User> users = jsonResponse.map((json) => User.fromJson(json)).toList();
+
+        // Add all parsed users to the userList
+        userList.addAll(users);
       } else {
         //  showWarning(response.body.toString());
         ApiChecker.checkApi(response);
