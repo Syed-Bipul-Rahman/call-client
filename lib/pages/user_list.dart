@@ -50,8 +50,7 @@ class _UserListState extends State<UserList> {
                         title: Text(user.username??""),
                         subtitle: Text(user.email??""),
                         onTap: () {
-                          // Handle onTap event (e.g., navigate to user details)
-                          print("User tapped: ${user.username}");
+                          _controller.makeCall(context, user.fcmToken??"");
                         },
                       );
                     },

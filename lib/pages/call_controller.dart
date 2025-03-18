@@ -2,6 +2,7 @@
 // RxList<CharacterModel> charactersList = <CharacterModel>[].obs;
 import 'dart:convert';
 
+import 'package:call_agora_lock/call_screen.dart';
 import 'package:call_agora_lock/enum_file.dart';
 import 'package:call_agora_lock/pages/model/user_model.dart';
 import 'package:call_agora_lock/pages/user_list.dart';
@@ -148,4 +149,49 @@ class CallScreenController extends GetxController {
       ApiChecker.checkApi(response);
     }
   }
+
+  //send call to the server
+  makeCall(BuildContext context,String fcmToken) async {
+    isLoading(true);
+    Map<String, dynamic> body = {
+      "fcmToken":fcmToken,
+    "title": "Incoming Video Call",
+      "body": "John Doe is calling",
+      "callerId": "65a7b2c3d4e5f6",
+      "callType": "video",
+      "roomId": "meeting_room_xyz789"
+    };
+
+    var headers = {'Content-Type': 'application/json'};
+
+    print("jacce body===========>" + body.toString());
+    var response = await ApiClient().postData(
+      ApiConstants.sendCall,
+      jsonEncode(body),
+      headers: headers,
+    );
+    print(response.body);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      isLoading(false);
+      //page route to login page
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CallScreen(callData: {},),
+        ),
+      );
+
+      if (kDebugMode) {
+        print("SUCCESS BODY========>${response.body}");
+      }
+    } else if (response.statusCode == 400) {
+      isLoading(false);
+    } else {
+      isLoading(false);
+      ApiChecker.checkApi(response);
+    }
+  }
+
+
+
 }
