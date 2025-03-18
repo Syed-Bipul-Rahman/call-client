@@ -15,7 +15,7 @@ class _UserListState extends State<UserList> {
   @override
   void initState() {
     super.initState();
-  _controller.getUserList();
+    _controller.getUserList();
   }
 
   @override
@@ -23,9 +23,45 @@ class _UserListState extends State<UserList> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-          child: Column(
-        children: [],
-      )),
+        child: Column(
+          children: [
+            Expanded(
+              child: Obx(() {
+                if (_controller.isLoading.value) {
+                  // Show a loading indicator while data is being fetched
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else if (_controller.userList.isEmpty) {
+                  // Show a message when there is no data
+                  return const Center(
+                    child: Text(
+                      "No users available",
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  );
+                } else {
+                  // Populate the ListView with ListTile widgets
+                  return ListView.builder(
+                    itemCount: _controller.userList.length,
+                    itemBuilder: (context, index) {
+                      final user = _controller.userList[index];
+                      return ListTile(
+                        title: Text(user.username??""),
+                        subtitle: Text(user.email??""),
+                        onTap: () {
+                          // Handle onTap event (e.g., navigate to user details)
+                          print("User tapped: ${user.username}");
+                        },
+                      );
+                    },
+                  );
+                }
+              }),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
