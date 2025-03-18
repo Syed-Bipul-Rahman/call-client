@@ -48,21 +48,21 @@ class CallScreenController extends GetxController {
     var fcmToken = await PrefsHelper.getString(Constants.fcmToken);
 
     isLoading(true);
-    // Map<String, dynamic> body = {
-    //   "username": userNameController.text,
-    //   "email": emailController.text,
-    //   "password":passwordController.text,
-    //   "fcmToken":fcmToken
-    // };
-
     Map<String, dynamic> body = {
-
-        "username": "sdfjksdkjfhsdjkfh",
-        "email": "sdfjksdkjfhsdjkfh@gmail.com",
-        "password":"123456",
-        "fcmToken":"cOLKxnGSTQ-WEtJ7kw_q-I:APA91bEVLxsJBq1HO8-4KK5fXvOEUA7ngkkuibIYMKqAbGGcj7SprgjgC1iJqABdECc2rO2ey7d66-ytKunV2ccYoTUYnGQIprGBH-918rbU3zopH3FLwgM"
-
+      "username": userNameController.text,
+      "email": emailController.text,
+      "password":passwordController.text,
+      "fcmToken":fcmToken
     };
+
+    // Map<String, dynamic> body = {
+    //
+    //     "username": "sdfjksdkjfhsdjkfh",
+    //     "email": "sdfjksdkjfhsdjkfh@gmail.com",
+    //     "password":"123456",
+    //     "fcmToken":"cOLKxnGSTQ-WEtJ7kw_q-I:APA91bEVLxsJBq1HO8-4KK5fXvOEUA7ngkkuibIYMKqAbGGcj7SprgjgC1iJqABdECc2rO2ey7d66-ytKunV2ccYoTUYnGQIprGBH-918rbU3zopH3FLwgM"
+    //
+    // };
     var headers = {
       'Content-Type': 'application/json'
     };
