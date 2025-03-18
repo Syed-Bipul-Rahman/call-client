@@ -1,4 +1,5 @@
 import 'package:call_agora_lock/pages/call_controller.dart';
+import 'package:call_agora_lock/pages/registerPage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -39,7 +40,17 @@ class _LoginPageState extends State<LoginPage> {
               _controller.loginVaiya(context);
             },
             child: Text("Login"),
-          )
+          ),
+          ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RegistrationPage(),
+                  ),
+                );
+              },
+              child: Text("Register"))
         ],
       )),
     );

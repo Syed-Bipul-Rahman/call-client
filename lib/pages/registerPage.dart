@@ -1,4 +1,6 @@
 import 'package:call_agora_lock/pages/call_controller.dart';
+import 'package:call_agora_lock/pages/login_page.dart';
+import 'package:call_agora_lock/pages/user_list.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -32,9 +34,19 @@ class _RegistrationPageState extends State<RegistrationPage> {
         SizedBox(height: 20),
         ElevatedButton(
             onPressed: () {
-            _controller.registerAnAccount(context);
+              _controller.registerAnAccount(context);
             },
-            child: Text("Register"))
+            child: Text("Register")),
+        ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginPage(),
+                ),
+              );
+            },
+            child: Text("Login"))
       ])),
     );
   }
