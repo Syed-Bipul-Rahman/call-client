@@ -2,14 +2,14 @@ import 'package:call_agora_lock/pages/call_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegistrationPage> createState() => _RegistrationPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegistrationPageState extends State<RegistrationPage> {
   final CallScreenController _controller = Get.put(CallScreenController());
 
   @override
@@ -32,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
         SizedBox(height: 20),
         ElevatedButton(
             onPressed: () {
-            _controller.registerAnAccount();
+            _controller.registerAnAccount(context);
             },
             child: Text("Register"))
       ])),
